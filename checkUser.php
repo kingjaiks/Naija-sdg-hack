@@ -1,73 +1,131 @@
-<h1 class="mainHeading">Check User</h1>
-<p style="font-size: 12px;">Check e-wallet details without login in.</p>
+<?php
 
-<div class="fullDisplaySection">
-	<h3>Check e-Naira User</h3>
-	<p  id="chkMsg" style="font-size: 12px; font-weight: bold;">error message </p>
-	<form>
-		<input type="text" placeholder="Enter phone / Wallet Alias"  id="userIdentifyer">
-		<select id="idType" >
-			<option value="">:: Checking method ::</option>
-			<option value="phone">Check by Phone</option>
-			<option value="alias">Check by Wallet Alias</option>
-		</select> <br>
-		<button class="boxBtn" id="chkBtn" type="button">Check User</button>
-	</form>
-</div>
+if(isset($_POST['getUserData'])){
+  if($_POST['getUserData'] === 'true'){
+    
 
-<script type="text/javascript">
-	document.getElementById('chkBtn').addEventListener('click', function(){
-		let number = document.getElementById('userIdentifyer');
-		let type = document.getElementById('idType');
-		let msg = document.getElementById('chkMsg');
-		if(number.value <= 0){
-			number.style.border = '#ff0000 solid 1px';
-			setTimeout(() => {
-				number.style.border = 'none';
-			}, 3000);
-		} 
-		else if(type.value == ''){
-			msg.innerText = 'Please Select checking method ';
-			msg.style.color = '#ff0000';
-			type.style.border = '#ff0000 solid 1px';
-			setTimeout(() => {
-				type.style.border = 'none';
-			}, 3000);
-		}  
-		else if(type.value == 'phone'){
-			if(number.textLength < 11){
-				msg.innerText = 'Phone number must be at least 11 characters ';
-				msg.style.color = '#ff0000';
-				number.style.border = '#ff0000 solid 1px';
-				setTimeout(() => {
-					number.style.border = 'none';
-				}, 3000);
-			} else {
-				processCheks();
-			}
-		}
-		else {
-			processCheks();
-		} 
-		
-		function processCheks(){
-			msg.innerText = 'Processing Request...';
-			msg.style.color = 'green';
-			let postData = "getUserData=true&phone="+number.value+'&type='+type.value;
-			let xhr = new XMLHttpRequest;
-				xhr.open('POST', 'funcs/checkUser.php', true);
-				xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-				xhr.onreadystatechange = function(){
-					if(xhr.readyState == 4 && xhr.status == 200){
-						console.log(xhr.responseText);
-						// let response = JSON.parse(xhr.responseText);
-					}
+    $type = $_POST['type'];
 
-				}
-				xhr.send(postData);
-		}
-	});
-</script>
+    
+    function phoneChecks(){
+      $curl = curl_init();
+      $setId = $_POST['phone'];
+      curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+      curl_setopt_array($curl, [
+        CURLOPT_URL => "https://rgw.k8s.apis.ng/centric-platforms/uat/enaira-user/GetUserDetailsByPhone",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_POSTFIELDS => "
+          'phone_number': '$setId',
+          'user_type': 'USER',
+          'channel_code': 'APISNG'
+        ",
+        CURLOPT_HTTPHEADER => [
+          "ClientId: 7fbf9ed60bef7be283b17b7eb6b8675",
+          "accept: application/json",
+          "content-type: application/json"
+        ],
+      ]);
+
+      $response = curl_exec($curl);
+      $err = curl_error($curl);
+
+      curl_close($curl);
+
+      if ($err) {
+        echo "cURL Error #:" . $err;
+      } else {
+        echo $response;
+      }
+
+    }
+
+    function aliasCheck(){
+      $curl = curl_init();
+      $setId = $_POST['phone'];
+      curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+      curl_setopt_array($curl, [
+        CURLOPT_URL => "https://rgw.k8s.apis.ng/centric-platforms/uat/enaira-user/GetUserDetailsByWalletAlias",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_POSTFIELDS => "
+          'wallet_alias': '$setId',
+          'user_type': 'user',
+          'channel_code': 'APISNG'
+        ",
+        CURLOPT_HTTPHEADER => [
+          "ClientId: 7fbf9ed60bef7be283b17b7eb6b86756",
+          "accept: application/json",
+          "content-type: application/json"
+        ],
+      ]);
+
+      $response = curl_exec($curl);
+      $err = curl_error($curl);
+
+      curl_close($curl);
+
+      if ($err) {
+        echo "cURL Error #:" . $err;
+      } else {
+        echo $response;
+      }
+    }
 
 
-<div class="clr"></div>
+    if($type == 'phone'){
+      phoneChecks();
+    } else if($type == 'alias'){
+      aliasCheck();
+    }
+
+
+  }
+}
+
+// response structure'
+// {
+//     "response_code": "00",
+//     "response_message": "Successful Request",
+//     "response_data": {
+//         "uid": "64625226407",
+//         "uid_type": "BVN",
+//         "kyc_status": "ACCEPTED",
+//         "phone": "08056064768",
+//         "email_id": "64625226407@enaira.gov.ng",
+//         "first_name": "EMMANUEL",
+//         "last_name": "ONUOHA",
+//         "middle_name": "EZECHI",
+//         "title": "",
+//         "town": "Abuja",
+//         "state_of_residence": "15",
+//         "lga": "Ezinihitte",
+//         "address": "35,JAMIU RAJI STREET,AGODO EGBE LAGOS",
+//         "country_of_origin": "NG",
+//         "account_number": "1000258985",
+//         "tier": "2",
+//         "country_of_birth": "NG",
+//         "state_of_origin": "10",
+//         "inst_code": "082",
+//         "enaira_bank_code": "keystone",
+//         "relationship_bank": "Keystone Bank",
+//         "wallet_info": {
+//             "tier": "2",
+//             "nuban": "1000021242",
+//             "message": "Created successfully",
+//             "wallet_alias": "@eonuoha.01",
+//             "wallet_address": "01G5P2NYVBPBK362FJK6X682CS",
+//             "daily_tnx_limit": "200000.00"
+//         },
+//         "password": "4cf03413139f02046c0c4ddb559790ef",
+//         "referrers_code": null
+//     }
+// }'
